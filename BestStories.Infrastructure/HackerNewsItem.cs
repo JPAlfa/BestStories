@@ -4,9 +4,9 @@ namespace BestStories.Infrastructure;
 
 internal record HackerNewsItem(
     [property: JsonPropertyName("id")] int Id,
-    [property: JsonPropertyName("title")] string Title,
-    [property: JsonPropertyName("url")] string Url,
-    [property: JsonPropertyName("by")] string By,
+    [property: JsonPropertyName("title")] string? Title,
+    [property: JsonPropertyName("url")] string? Url,
+    [property: JsonPropertyName("by")] string? By,
     [property: JsonPropertyName("time")] long Time,
     [property: JsonPropertyName("score")] int Score,
     [property: JsonPropertyName("descendants")] int Descendants

@@ -80,10 +80,11 @@ public class HackerNewsClient : IHackerNewsClient
             var item = JsonSerializer.Deserialize<HackerNewsItem>(response);
 
             if (item is null) return null;
+            if (string.IsNullOrWhiteSpace(item.Title) || string.IsNullOrWhiteSpace(item.By)) return null;
 
             return new HackerNewsItemResponse(
                 item.Title,
-                item.Url,
+                item.Url ?? string.Empty,
                 item.By,
                 item.Time,
                 item.Score,
