@@ -1,0 +1,7 @@
+**/.git
+**/.github
+**/.vs
+**/obj
+**/bin
+BestStories.Tests/
+*.md
