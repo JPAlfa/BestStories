@@ -1,4 +1,3 @@
-using BestStories.Api.Models;
 using BestStories.Application.Interfaces;
 using BestStories.Domain;
 using Microsoft.AspNetCore.Mvc;
@@ -25,13 +24,17 @@ public class BestStoriesController : ControllerBase
     /// <returns>Array of stories sorted by score descending.</returns>
     /// <response code="200">Returns the top N stories.</response>
     /// <response code="400">If n is less than or equal to zero.</response>
+    /// <response code="500">If an unexpected server error occurs.</response>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Story>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Get([FromQuery] int n, CancellationToken cancellationToken)
     {
         if (n <= 0)
-            return BadRequest(new ErrorResponse("Parameter 'n' must be greater than zero."));
+            return Problem(
+                detail: "Parameter 'n' must be greater than zero.",
+                statusCode: StatusCodes.Status400BadRequest);
 
         var stories = await _useCase.ExecuteAsync(n, cancellationToken);
 

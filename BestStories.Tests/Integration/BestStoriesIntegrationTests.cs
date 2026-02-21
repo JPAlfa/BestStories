@@ -2,6 +2,8 @@ using System.Net;
 using System.Net.Http.Json;
 using BestStories.Application.DTOs;
 using BestStories.Application.Interfaces;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -112,6 +114,35 @@ public class BestStoriesIntegrationTests : IClassFixture<WebApplicationFactory<P
         var response = await client.GetAsync($"/api/beststories?n={n}");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetBestStories_WhenClientThrows_Returns500WithJsonError()
+    {
+        var mockClient = new Mock<IHackerNewsClient>();
+        mockClient.Setup(c => c.GetBestStoryItemsAsync(It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Upstream failure"));
+
+        var client = _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(IHackerNewsClient));
+                if (descriptor != null) services.Remove(descriptor);
+
+                services.AddSingleton(mockClient.Object);
+            });
+        }).CreateClient();
+
+        var response = await client.GetAsync("/api/beststories?n=5");
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
+
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.NotNull(problem);
+        Assert.Equal(StatusCodes.Status500InternalServerError, problem.Status);
+        Assert.False(string.IsNullOrWhiteSpace(problem.Detail));
     }
 
     // DTO to deserialize the API JSON response

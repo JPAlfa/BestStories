@@ -1,6 +1,7 @@
 using BestStories.Api.Controllers;
 using BestStories.Application.Interfaces;
 using BestStories.Domain;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
@@ -40,11 +41,13 @@ public class BestStoriesControllerTests
     [InlineData(0)]
     [InlineData(-1)]
     [InlineData(-100)]
-    public async Task Get_WithInvalidN_ShouldReturnBadRequest(int n)
+    public async Task Get_WithInvalidN_ShouldReturnBadRequestWithProblemDetails(int n)
     {
         var result = await _controller.Get(n, CancellationToken.None);
 
-        Assert.IsType<BadRequestObjectResult>(result);
+        var objectResult = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+        Assert.IsType<ProblemDetails>(objectResult.Value);
     }
 
     [Fact]
