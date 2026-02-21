@@ -2,6 +2,13 @@
 
 ASP.NET Core Web API that retrieves the top *n* "best stories" from the [Hacker News API](https://github.com/HackerNews/API), sorted by score in descending order.
 
+## Live Demo
+
+The API is deployed and available at:
+
+- **Scalar API Docs**: [https://best-stories.up.railway.app/scalar/v1](https://best-stories.up.railway.app/scalar/v1)
+- **Endpoint**: `GET https://best-stories.up.railway.app/api/beststories?n=10`
+
 ## Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download)
@@ -10,7 +17,7 @@ ASP.NET Core Web API that retrieves the top *n* "best stories" from the [Hacker 
 
 ```bash
 # Clone the repository
-git clone https://github.com/<your-username>/BestStories.git
+git clone https://github.com/JPAlfa/BestStories.git
 cd BestStories
 
 # Build
@@ -24,7 +31,7 @@ The API will be available at `http://localhost:5242`.
 
 ### API Documentation
 
-In development mode, interactive API docs are available via [Scalar](https://scalar.com/) at:
+Interactive API docs are available via [Scalar](https://scalar.com/) at:
 
 ```
 http://localhost:5242/scalar/v1
@@ -61,6 +68,7 @@ curl http://localhost:5242/api/beststories?n=5
 |--------|-------------|
 | 200 OK | Returns JSON array of stories sorted by score descending |
 | 400 Bad Request | Invalid or missing `n` parameter |
+| 500 Internal Server Error | Unexpected server error — returns RFC 7807 ProblemDetails |
 
 ## Running Tests
 
@@ -68,7 +76,7 @@ curl http://localhost:5242/api/beststories?n=5
 dotnet test
 ```
 
-- **26 tests** total: 14 unit tests + 5 integration tests + 7 domain tests
+- **27 tests** total: 14 unit tests + 6 integration tests + 7 domain tests
 
 ## Architecture
 
@@ -83,7 +91,7 @@ Domain ← Application ← Infrastructure ← Api
 | **BestStories.Domain** | Rich domain entity (`Story`) with invariants and factory method |
 | **BestStories.Application** | Use case orchestration, gateway interface, DTOs |
 | **BestStories.Infrastructure** | Hacker News HTTP client, in-memory caching |
-| **BestStories.Api** | REST controller, DI configuration, startup |
+| **BestStories.Api** | REST controller, global exception handler, DI configuration, startup |
 
 ### Key Design Decisions
 
@@ -91,7 +99,20 @@ Domain ← Application ← Infrastructure ← Api
 - **Throttled parallelism** — Story details are fetched concurrently using `SemaphoreSlim` (configurable, default max 20) to avoid overloading the Hacker News API.
 - **Rich Domain Model** — `Story` validates its own invariants in the constructor (non-empty title, non-negative score, etc.) and converts Unix timestamps to ISO 8601.
 - **UseCase pattern** — Application layer orchestrates the flow: fetches raw data via gateway interface → creates domain entities → sorts → limits.
-- **DependencyInjection extensions** — Each layer registers its own services via `AddApplication()` / `AddInfrastructure()`.
+- **Global exception handler** — `IExceptionHandler` maps `OperationCanceledException` to 499 and all other unhandled exceptions to 500 with RFC 7807 ProblemDetails.
+- **Null-safe HN API integration** — Fields missing from the HN API response (e.g. `title`, `by`) cause the story to be silently skipped; missing `url` (Ask HN posts) is normalised to an empty string.
+- **DependencyInjection extensions** — Each layer registers its own services via `AddApplication()` / `AddInfrastructure()` / `AddApi()`.
+
+## CI/CD
+
+- **CI** — GitHub Actions runs build and tests on every push and pull request to `main`.
+- **CD** — On CI success, GitHub Actions builds and pushes a Docker image to [GitHub Container Registry](https://ghcr.io). Railway deploys automatically via its native GitHub integration.
+
+```bash
+# Pull and run the published Docker image
+docker pull ghcr.io/JPAlfa/beststories:latest
+docker run -p 8080:8080 ghcr.io/JPAlfa/beststories:latest
+```
 
 ## Configuration
 
@@ -121,5 +142,4 @@ All settings are in `BestStories.Api/appsettings.json`:
 - **Health check endpoint** — `GET /health` to verify HN API connectivity.
 - **Pagination** — Support `offset` / `limit` instead of just `n`.
 - **Rate limiting** — Add ASP.NET Core rate limiting middleware to protect the API.
-- **Logging** — Add structured logging with Serilog for better observability.
-- **Docker support** — Add `Dockerfile` and `docker-compose.yml` for containerized deployment.
+- **Structured logging** — Add Serilog for better observability.
