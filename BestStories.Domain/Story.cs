@@ -1,12 +1,25 @@
+using System.Text.Json.Serialization;
+
 namespace BestStories.Domain;
 
 public class Story
 {
+    [JsonPropertyName("title")]
     public string Title { get; }
+
+    [JsonPropertyName("uri")]
     public string Uri { get; }
+
+    [JsonPropertyName("postedBy")]
     public string PostedBy { get; }
+
+    [JsonPropertyName("time")]
     public string Time { get; }
+
+    [JsonPropertyName("score")]
     public int Score { get; }
+
+    [JsonPropertyName("commentCount")]
     public int CommentCount { get; }
 
     private Story(string title, string url, string postedBy, long unixTime, int score, int commentCount)
