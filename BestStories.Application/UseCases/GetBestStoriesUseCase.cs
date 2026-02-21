@@ -3,7 +3,7 @@ using BestStories.Domain;
 
 namespace BestStories.Application.UseCases;
 
-public class GetBestStoriesUseCase
+public class GetBestStoriesUseCase : IGetBestStoriesUseCase
 {
     private readonly IHackerNewsClient _client;
 

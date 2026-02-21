@@ -1,5 +1,4 @@
 using BestStories.Application.Interfaces;
-using BestStories.Application.UseCases;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,8 +15,6 @@ public static class DependencyInjection
             var baseUrl = configuration.GetValue("HackerNews:BaseUrl", "https://hacker-news.firebaseio.com/v0/");
             client.BaseAddress = new Uri(baseUrl!);
         });
-
-        services.AddScoped<GetBestStoriesUseCase>();
 
         return services;
     }
