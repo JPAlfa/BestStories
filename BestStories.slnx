@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="BestStories.Api/BestStories.Api.csproj" />
+  <Project Path="BestStories.Application/BestStories.Application.csproj" />
+  <Project Path="BestStories.Domain/BestStories.Domain.csproj" />
+  <Project Path="BestStories.Infrastructure/BestStories.Infrastructure.csproj" />
+  <Project Path="BestStories.Tests/BestStories.Tests.csproj" />
+</Solution>
